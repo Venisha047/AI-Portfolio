@@ -1,0 +1,5 @@
+{
+  "name": "BrewMuse",
+  "description": "An AI coffee sommelier & visually driven product designer that surfaces trending coffee recipes, generates new ones on demand, and provides healthier variants.",
+  "requestFramePermissions": []
+}
