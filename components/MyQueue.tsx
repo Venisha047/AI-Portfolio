@@ -3,24 +3,24 @@ import { useAppStore } from '../hooks/useAppStore';
 import { Recipe } from '../types';
 import { RecipeCard } from './RecipeCard';
 
-interface MyBrewsProps {
+interface MyQueueProps {
   onSelectRecipe: (recipe: Recipe) => void;
 }
 
-const MyBrews: React.FC<MyBrewsProps> = ({ onSelectRecipe }) => {
-  const { getFavoriteRecipes } = useAppStore();
-  const favoriteRecipes = getFavoriteRecipes();
+const MyQueue: React.FC<MyQueueProps> = ({ onSelectRecipe }) => {
+  const { getQueuedRecipes } = useAppStore();
+  const queuedRecipes = getQueuedRecipes();
 
   return (
     <section className="animate-fade-in">
       <div className="text-center mb-10">
-        <h2 className="font-serif text-4xl text-brown-dark">My Favorite Brews</h2>
-        <p className="text-secondary-text mt-1">Your hand-picked collection of coffee inspiration.</p>
+        <h2 className="font-serif text-4xl text-brown-dark">My Brewing Queue</h2>
+        <p className="text-secondary-text mt-1">Your list of coffee adventures to try next.</p>
       </div>
 
-      {favoriteRecipes.length > 0 ? (
+      {queuedRecipes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {favoriteRecipes.map((recipe, index) => (
+          {queuedRecipes.map((recipe, index) => (
             <div key={recipe.id} className="recipe-card-wrapper" style={{ animationDelay: `${index * 80}ms` }}>
               <RecipeCard recipe={recipe} onSelect={() => onSelectRecipe(recipe)} />
             </div>
@@ -28,10 +28,10 @@ const MyBrews: React.FC<MyBrewsProps> = ({ onSelectRecipe }) => {
         </div>
       ) : (
         <div className="text-center py-16 px-6 bg-white/50 rounded-2xl">
-          <span className="text-5xl mb-4 inline-block">⭐</span>
-          <p className="text-xl font-bold text-brown">Your favorites list is empty!</p>
+          <span className="text-5xl mb-4 inline-block">📋</span>
+          <p className="text-xl font-bold text-brown">Your queue is empty!</p>
           <p className="text-secondary-text mt-2">
-            Click the heart icon on any recipe to save it here for later.
+            Click the plus icon on any recipe to add it to your to-try list.
           </p>
         </div>
       )}
@@ -46,4 +46,4 @@ const MyBrews: React.FC<MyBrewsProps> = ({ onSelectRecipe }) => {
   );
 };
 
-export default MyBrews;
+export default MyQueue;

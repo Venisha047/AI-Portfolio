@@ -1,34 +1,41 @@
-import React, { useState } from 'react';
-import { MOODS } from '../constants';
-import { LoadingSpinner, SearchIcon } from './icons';
 
-interface BrewFinderProps {
-  onMoodSelect: (mood: string) => void;
-  onPantryGenerate: (ingredients: string) => void;
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  selectedTags: string[];
-  // FIX: Updated type to allow functional updates for state, resolving a TypeScript error on line 33.
-  setSelectedTags: React.Dispatch<React.SetStateAction<string[]>>;
-  isLoadingMood: boolean;
-  isLoadingPantry: boolean;
-  activeMood: string | null;
-}
+
+import React from 'react';
+import { DIETARY_TAGS } from '../constants';
+import { SearchIcon } from './icons';
+import { useAppStore } from '../hooks/useAppStore';
+
+interface BrewFinderProps {}
 
 const TAGS = ['HOT', 'ICED', 'SWEET', 'STRONG'];
+const CAFFEINE_LEVELS = ['ANY', 'HIGH', 'MEDIUM', 'LOW', 'DECAF'];
 
-export const BrewFinder: React.FC<BrewFinderProps> = ({
-  onMoodSelect,
-  onPantryGenerate,
-  searchQuery,
-  setSearchQuery,
-  selectedTags,
-  setSelectedTags,
-  isLoadingMood,
-  isLoadingPantry,
-  activeMood,
-}) => {
-  const [pantryIngredients, setPantryIngredients] = useState('');
+const FilterChip: React.FC<{ label: string; isSelected: boolean; onClick: () => void }> = ({ label, isSelected, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all duration-200 border-2 transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold ${
+      isSelected
+        ? 'bg-brown-dark text-white border-brown-dark'
+        : 'bg-surface text-brown border-subtle-border hover:border-brown/50 hover:bg-cream'
+    }`}
+  >
+    {label}
+  </button>
+);
+
+
+export const BrewFinder: React.FC<BrewFinderProps> = () => {
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedTags,
+    setSelectedTags,
+    selectedCaffeine,
+    setSelectedCaffeine,
+    selectedDiets,
+    setSelectedDiets,
+    clearFilters,
+  } = useAppStore();
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags(prev =>
@@ -36,116 +43,88 @@ export const BrewFinder: React.FC<BrewFinderProps> = ({
     );
   };
 
-  const handlePantrySubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pantryIngredients.trim()) {
-      onPantryGenerate(pantryIngredients.trim());
-      setPantryIngredients('');
-    }
+  const handleDietToggle = (diet: string) => {
+    setSelectedDiets(prev =>
+      prev.includes(diet) ? prev.filter(d => d !== diet) : [...prev, diet]
+    );
   };
   
-  const clearFilters = () => {
-    setSearchQuery('');
-    setSelectedTags([]);
-  }
-
-  const isLoading = isLoadingMood || isLoadingPantry;
+  const cardBaseClass = "bg-surface p-6 md:p-8 rounded-2xl shadow-lg border border-subtle-border";
+  const filtersAreActive = searchQuery || selectedTags.length > 0 || selectedCaffeine !== 'ANY' || selectedDiets.length > 0;
 
   return (
-    <section className="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-brown/10 space-y-8">
-      
-      {/* Part 1: Search & Filter */}
-      <div className="space-y-4">
-        <h3 className="font-serif text-2xl text-brown-dark text-center">Find Your Perfect Brew</h3>
+    <section className="max-w-4xl mx-auto space-y-8 animate-fade-in">
+      <div className={`${cardBaseClass} space-y-6`}>
+        <div className="flex justify-between items-center">
+            <h3 className="font-serif text-2xl text-brown-dark">Filter & Refine</h3>
+            {filtersAreActive && (
+              <button 
+                onClick={clearFilters} 
+                className="text-sm text-secondary-text hover:text-brown-dark underline rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+              >
+                &times; Clear All Filters
+              </button>
+            )}
+        </div>
         
         <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <SearchIcon className="text-brown/40" />
+          <label htmlFor="recipe-search" className="sr-only">Search by name or ingredient</label>
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <SearchIcon className="text-brown/40" aria-hidden="true" />
           </div>
           <input 
             type="text"
+            id="recipe-search"
             placeholder="Search by name or ingredient..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-cream/50 border-2 border-brown/20 rounded-lg shadow-inner text-lg focus:outline-none focus:ring-2 focus:ring-gold transition"
-            disabled={isLoading}
+            className="w-full pl-12 pr-4 py-3 bg-cream/50 border-2 border-brown/20 rounded-lg shadow-inner-soft text-lg focus:outline-none focus:ring-2 focus:ring-gold transition text-brown-dark placeholder:text-secondary-text/70"
           />
         </div>
 
-        <div className="flex flex-wrap justify-center items-center gap-2">
-          <span className="text-sm font-semibold text-secondary-text mr-2">Filter by:</span>
-          {TAGS.map(tag => (
-            <button
-              key={tag}
-              onClick={() => handleTagToggle(tag)}
-              className={`px-3 py-1 rounded-full text-sm font-bold transition-all ${
-                selectedTags.includes(tag)
-                  ? 'bg-brown text-white'
-                  : 'bg-cream text-brown hover:bg-brown/10'
-              }`}
-              disabled={isLoading}
-            >
-              {tag.charAt(0) + tag.slice(1).toLowerCase()}
-            </button>
-          ))}
-          {(searchQuery || selectedTags.length > 0) && (
-            <button 
-              onClick={clearFilters} 
-              className="text-xs text-secondary-text hover:text-brown underline ml-2"
-              disabled={isLoading}
-            >
-              &times; Clear
-            </button>
-          )}
-        </div>
-      </div>
+        <div className="space-y-4">
+            <div className="space-y-3">
+                <h4 className="font-semibold text-secondary-text">Caffeine Level</h4>
+                <div className="flex flex-wrap items-center gap-2">
+                    {CAFFEINE_LEVELS.map(level => (
+                      <FilterChip 
+                        key={level}
+                        label={level.charAt(0) + level.slice(1).toLowerCase()}
+                        isSelected={selectedCaffeine === level}
+                        onClick={() => setSelectedCaffeine(level)}
+                      />
+                    ))}
+                </div>
+            </div>
 
-      <div className="border-t border-brown/10"></div>
-
-      {/* Part 2: Generate */}
-      <div className="space-y-6 text-center">
-        <h3 className="font-serif text-2xl text-brown-dark">...Or Generate Something New</h3>
-
-        <div>
-          <p className="text-secondary-text mb-3">How are you feeling?</p>
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
-            {MOODS.map(({ name, icon }) => (
-              <button
-                key={name}
-                onClick={() => onMoodSelect(name)}
-                disabled={isLoading}
-                className={`px-4 py-2 rounded-full font-bold text-base transition-all duration-300 ease-in-out transform focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 focus:ring-offset-white active:scale-95 disabled:opacity-50 disabled:cursor-wait
-                  ${activeMood === name
-                    ? 'bg-brown-dark text-white shadow-md scale-105'
-                    : 'bg-white text-brown hover:bg-brown/10 shadow-sm hover:scale-105 border border-brown/10'
-                  }`}
-              >
-                {name} {icon}
-              </button>
-            ))}
-          </div>
-        </div>
-        
-        <div className="pt-2">
-          <p className="text-secondary-text mb-3">What's in your pantry?</p>
-          <form onSubmit={handlePantrySubmit} className="flex flex-col sm:flex-row gap-2 max-w-lg mx-auto">
-            <input
-              type="text"
-              value={pantryIngredients}
-              onChange={(e) => setPantryIngredients(e.target.value)}
-              placeholder="e.g., oat milk, vanilla..."
-              className="flex-grow px-4 py-3 bg-cream/50 border-2 border-brown/20 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-gold transition"
-              disabled={isLoading}
-              aria-label="Enter ingredients to generate a recipe"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !pantryIngredients.trim()}
-              className="bg-brown text-white font-bold py-3 px-6 rounded-lg hover:bg-brown-dark transition-colors flex items-center justify-center gap-2 disabled:bg-brown/40 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 active:scale-95"
-            >
-              {isLoadingPantry ? <><LoadingSpinner /> Generating...</> : 'Generate'}
-            </button>
-          </form>
+            <div className="grid md:grid-cols-2 gap-x-8 gap-y-4 pt-2">
+              <div className="space-y-3">
+                  <h4 className="font-semibold text-secondary-text">Style</h4>
+                  <div className="flex flex-wrap items-center gap-2">
+                      {TAGS.map(tag => (
+                          <FilterChip
+                            key={tag}
+                            label={tag.charAt(0) + tag.slice(1).toLowerCase()}
+                            isSelected={selectedTags.includes(tag)}
+                            onClick={() => handleTagToggle(tag)}
+                          />
+                      ))}
+                  </div>
+              </div>
+               <div className="space-y-3">
+                    <h4 className="font-semibold text-secondary-text">Dietary</h4>
+                    <div className="flex flex-wrap items-center gap-2">
+                        {DIETARY_TAGS.map(diet => (
+                          <FilterChip
+                            key={diet}
+                            label={diet.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                            isSelected={selectedDiets.includes(diet)}
+                            onClick={() => handleDietToggle(diet)}
+                          />
+                        ))}
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
     </section>

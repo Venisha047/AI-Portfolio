@@ -6,9 +6,9 @@ interface RecipeCharacteristicsProps {
 }
 
 const Characteristic: React.FC<{ Icon: React.FC<{className?: string}>; label: string }> = ({ Icon, label }) => (
-  <div className="flex items-center gap-1.5 bg-brown/10 text-brown px-2 py-1 rounded-full">
-    <Icon className="text-brown/70"/>
-    <span className="text-xs font-semibold uppercase tracking-wider">{label}</span>
+  <div className="flex items-center gap-1.5 bg-cream text-brown px-2.5 py-1.5 rounded-full border border-subtle-border">
+    <Icon className="text-gold"/>
+    <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
   </div>
 );
 
